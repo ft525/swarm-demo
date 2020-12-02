@@ -1,0 +1,89 @@
+version: '3'
+
+
+services:
+    # Nginx
+    nginx:
+        image: nginx:1.19-alpine
+        volumes:
+            # 基礎設定檔
+            - ./etc/nginx119/nginx.conf:/etc/nginx/nginx.conf
+            # 客製設定檔
+            - ./etc/nginx119/conf.d:/etc/nginx/conf.d
+
+            # 預設 HTTPS 憑證
+            - ./etc/nginx119/localhost.crt:/usr/local/nginx/conf/localhost.crt
+            - ./etc/nginx119/localhost.key:/usr/local/nginx/conf/localhost.key
+
+            # DocumentRoot
+            - ./volumes/htdocs:/var/htdocs
+
+            # Log
+            - ./volumes/logs/nginx119:/var/log/nginx
+        ports:
+            # Web
+            - '9080:80'
+            - '9443:443'
+        networks:
+            - swarm-demo-net
+        deploy:
+            placement:
+                constraints:
+                    - "node.labels.type==ap"
+            restart_policy:
+                condition: on-failure
+
+    # MySQL
+    mysql80:
+        image: mysql:8.0
+        user: '${PROJECT_UID}:${PROJECT_GID}'
+        volumes:
+            # 客製設定檔
+            - ./etc/mysql80/conf.d/custom.cnf:/etc/mysql/conf.d/custom.cnf
+            # DB 檔案位置
+            - ./volumes/mysql80:/var/lib/mysql
+            # Log
+            - ./volumes/logs/mysql80:/var/log/mysql
+        networks:
+            - swarm-demo-net
+        env_file:
+            - ./env/mysql80
+        deploy:
+            placement:
+                constraints:
+                    - "node.labels.type==db"
+            restart_policy:
+                condition: on-failure
+
+    # PHP
+    php73:
+        image: php:7.3-fpm-alpine3.12
+        volumes:
+            # 主設定檔
+            - ./etc/php73/php.ini-development:/usr/local/etc/php/php.ini
+            # 客製設定檔
+            - ./etc/php73/conf.d/custom.ini:/usr/local/etc/php/conf.d/custom.ini
+            # PHP-FPM 設定檔
+            - ./etc/php73-fpm.d/www.conf:/usr/local/etc/php-fpm.d/www.conf
+
+            # Log
+            - ./volumes/logs/php73:/var/log/php-fpm
+
+            # DocumentRoot
+            - ./volumes/htdocs:/var/htdocs
+        networks:
+            swarm-demo-net:
+                aliases:
+                    # hostname 別名 (用來指定 nginx 預設的 PHP-FPM 使用版本) (Swarm 模式最好不要使用)
+                    - php-main
+        deploy:
+            placement:
+                constraints:
+                    - "node.labels.type==ap"
+            restart_policy:
+                condition: on-failure
+
+
+networks:
+    swarm-demo-net:
+        driver: overlay
