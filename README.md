@@ -1,4 +1,4 @@
-## DNMP (Docker、Nginx、MySQL、PHP) 範例
+## DNMP (Docker、Nginx、MySQL、PHP) 範例 (Swarm 版)
 
 
 
@@ -9,7 +9,7 @@
 .env
 
 
-### Project user 預設是 root，若需要新增 project user 可執行下面指令 (要先調整 .env)
+### Project user 預設是 root，若需要新增 project user 可執行下面指令 (請先調整 .env)
 [root]# ./usr/local/create_system_project_user.sh
 
 
@@ -17,7 +17,7 @@
 將 etc/nginx119/conf.d/samples/994-demo.conf 複製到 etc/nginx119/conf.d/vhosts 底下
 並修改 server_name 為 127.0.0.1 或你自己的 domain (localhost 是 nginx 的預設值，請不要使用，或自行調整預設值 etc/nginx119/conf.d/default.conf)
 
-若不是使用 root 執行，請修改 ./etc/nginx119/nginx.conf 裡的 user 設定
+若不想使用 root 執行，請修改 ./etc/nginx119/nginx.conf 裡的 user 設定
 
 
 ### MySQL 設定 (phpMyAdmin)
@@ -29,20 +29,30 @@
 
 
 ### PHP 設定
-若不要使用預設的身份 (www-data) 執行，請修改 ./etc/php73-fpm.d/www.conf 裡的 user 設定
+若不想使用預設的身份 (www-data) 執行，請修改 ./etc/php73-fpm.d/www.conf 裡的 user 設定
 
 
-### 啟動 DNMP
-[user]$ docker-compose up -d
+### 部署
+請將該資料夾放到每一台要部署的 server 上 (路徑要一致)
+選定一台 server 當 manager node (docker swarm init)
+其它 server 加入 swarm (docker swarm join)
+若該 node 要負責執行 php & nginx 請增加 ap label (docker node update --label-add="type=ap" {node})
+若該 node 要負責執行 mysql 請增加 db label (docker node update --label-add="type=db" {node})
+
+
+### 啟動
+在 manager node 上，此資料夾下，執行
+$ docker stack deploy -c docker-compose.yml {stack_name}
 
 
 ### 畫面檢視
-http://127.0.0.1:9080	// Web
-https://127.0.0.1:9443	// phpMyAdmin
+http://{your-domain}:9080	// Web
+https://{your-domain}:9443	// phpMyAdmin
 
 
-### 關閉 DNMP
-[user]$ docker-compose down -v
+### 關閉
+在 manager node 上，此資料夾下，執行
+$ docker stack rm {stack_name}
 
 
 
