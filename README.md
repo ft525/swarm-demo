@@ -61,4 +61,4 @@ $ docker stack rm {stack_name}
 1. 使用 Swarm 模式，無法使用 build，請將會使用到的 image 都先 push 到 docker hub 或 local registry 上，並調整 docker-compose 裡的 image 來源
 2. PHP 預設沒有安裝 mysqli extension (phpMyAdmin 需要)，請自行 build services/php73，並 push 到 registry 上
 3. 避免使用 aliases，因為 swarm 無法使用 depends_on，在該 service 啟動前，使用 aliases 會導致找不到該 service，而發生錯誤
-4. Ngin 與 PHP 最好是在同一台 host，否則請確保兩邊的 htdocs 一致
+4. Nginx 與 PHP 最好是在同一台 host，否則請確保兩邊的 htdocs 一致
